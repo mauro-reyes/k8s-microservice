@@ -1,0 +1,30 @@
+replicaCount: 1
+
+image:
+  repository: docker.io/REPLACE_ME_DOCKERHUB_USER/microservice
+  tag: "dev"
+  pullPolicy: IfNotPresent
+
+appVersion: "0.1.0"
+
+service:
+  type: ClusterIP
+  port: 80
+  targetPort: 8000
+
+env:
+  APP_NAME: "microservice"
+  ENVIRONMENT: "k8s-local"
+
+resources:
+  requests:
+    cpu: "50m"
+    memory: "64Mi"
+  limits:
+    cpu: "200m"
+    memory: "128Mi"
+
+probes:
+  path: /health
+  initialDelaySeconds: 5
+  periodSeconds: 10

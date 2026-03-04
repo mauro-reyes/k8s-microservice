@@ -1,0 +1,5 @@
+replicaCount: 2
+env:
+  ENVIRONMENT: "dev"
+image:
+  tag: "dev"
