@@ -1,7 +1,7 @@
 replicaCount: 1
 
 image:
-  repository: docker.io/REPLACE_ME_DOCKERHUB_USER/microservice
+  repository: docker.io/abdreyes/microservice
   tag: "dev"
   pullPolicy: IfNotPresent
 
