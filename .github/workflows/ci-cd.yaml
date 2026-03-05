@@ -1,0 +1,46 @@
+name: ci-cd
+
+on:
+  push:
+    branches: ["main"]
+
+jobs:
+  build-push-and-update-helm:
+    runs-on: ubuntu-lastest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set short SHA
+        id: vars
+        run: echo "SHA_SHORT=${GITHUB_SHA::7}" >> $GITHUB_OUTPUT
+
+      - name: Login to DockerHub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and push image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: docker.io/${{ secrets.DOCKERHUB_USERNAME }}/microservice:${{ steps.vars.outputs.SHA_SHORT }}
+
+      - name: Install yq
+        uses: mikefarah/yq@v4.44.3
+
+      - name: Update Helm values.yaml (image tag + appVersion)
+        run: |
+          yq -i '.image.tag = "${{ steps.vars.outputs.SHA_SHORT }}"' helm/microservice/values.yaml
+          yq -i '.appVersion = "${{ steps.vars.outputs.SHA_SHORT }}"' helm/microservice/values.yaml
+
+      - name: Commit updated Helm values.yaml
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@users.noreply.github.com"
+          git add helm/microservice/values.yaml
+          git commit -m "chore: update image tag to ${{ steps.vars.outputs.SHA_SHORT }}" || echo "No changes to commit"
+          git push
